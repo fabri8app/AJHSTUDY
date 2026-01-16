@@ -1,50 +1,31 @@
-export const config = {
-  runtime: 'edge', // Edge runtime fast hai aur crash nahi hota
-};
+export default async function handler(req, res) {
+    const targetDomain = "deltastudy.site";
+    const url = new URL(req.url, `https://${req.headers.host}`);
+    
+    // Agar koi homepage pe aaye toh use /study dikhao
+    let path = url.pathname === "/" ? "/study" : url.pathname;
+    const targetUrl = "https://" + targetDomain + path + url.search;
 
-export default async function handler(req) {
-  const url = new URL(req.url);
-  const myDomain = "ajhstudy.vercel.app";
-  const targetDomain = "deltastudy.site";
+    try {
+        const response = await fetch(targetUrl, {
+            headers: {
+                "User-Agent": req.headers["user-agent"],
+                "Host": targetDomain,
+                "Referer": "https://deltastudy.site/"
+            }
+        });
 
-  // Agar koi seedha domain pe aaye toh /study dikhao
-  let path = url.pathname === "/" ? "/study" : url.pathname;
-  const targetUrl = "https://" + targetDomain + path + url.search;
+        const contentType = response.headers.get("content-type");
+        res.setHeader("Content-Type", contentType);
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        
+        // Security headers hatana zaroori hai
+        res.setHeader("X-Frame-Options", "ALLOWALL");
 
-  try {
-    const response = await fetch(targetUrl, {
-      headers: {
-        "User-Agent": req.headers.get("user-agent"),
-        "Host": targetDomain,
-        "Referer": `https://${targetDomain}/`,
-      }
-    });
+        const data = await response.arrayBuffer();
+        res.send(Buffer.from(data));
 
-    const contentType = response.headers.get("content-type") || "";
-
-    // Agar file HTML ya JS hai, toh uske andar ke links replace karo
-    if (contentType.includes("text/html") || contentType.includes("application/javascript")) {
-      let text = await response.text();
-      
-      // Magic logic: Unka domain replace karke apna domain daal rahe hain
-      text = text.replaceAll(targetDomain, myDomain);
-      text = text.replaceAll("https://deltastudy.site", `https://${myDomain}`);
-
-      return new Response(text, {
-        headers: {
-          "content-type": contentType,
-          "Access-Control-Allow-Origin": "*",
-          "Cache-Control": "no-store"
-        }
-      });
+    } catch (error) {
+        res.status(500).send("Analyzer Error: " + error.message);
     }
-
-    // Baaki files (images, fonts) ko waise hi jaane do
-    return response;
-
-  } catch (e) {
-    return new Response("Analyzer Error: " + e.message, { status: 500 });
-  }
-}
-  }
 }
