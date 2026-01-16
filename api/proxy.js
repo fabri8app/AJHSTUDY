@@ -5,8 +5,7 @@ export default async function (req) {
   const myDomain = "ajhstudy.vercel.app";
   const url = new URL(req.url);
   
-  // Agar koi seedha domain pe aaye toh /study dikhao
-  let path = url.pathname === "/" ? "/study" : url.pathname;
+  const path = url.pathname === "/" ? "/study" : url.pathname;
   const targetUrl = `https://${targetHost}${path}${url.search}`;
 
   try {
@@ -18,23 +17,33 @@ export default async function (req) {
       }
     });
 
-    const contentType = response.headers.get("content-type") || "";
+    let contentType = response.headers.get("content-type") || "";
 
-    // Agar HTML ya JS hai, toh uske andar domain replace karo
-    if (contentType.includes("text/html") || contentType.includes("application/javascript")) {
-      let text = await response.text();
-      // Sab jagah unka domain replace karke apna daal rahe hain
-      text = text.split(targetHost).join(myDomain);
+    if (contentType.includes("text/html")) {
+      let html = await response.text();
       
-      return new Response(text, {
-        headers: { "content-type": contentType, "Access-Control-Allow-Origin": "*" }
-      });
+      // Magic Injection: Firebase ko lagne lagega ki domain 'deltastudy.site' hi hai
+      const injectionScript = `
+        <script>
+          // Domain spoofing logic
+          Object.defineProperty(document, 'domain', { get: function() { return '${targetHost}'; } });
+          const originalLocation = window.location;
+          // Ye line Firebase ko confuse karne ke liye hai
+          console.log("Analyzer Mode: Domain Masked Successfully");
+        </script>
+      `;
+      
+      // HTML ke <head> ke baad script inject kar rahe hain
+      html = html.replace('<head>', '<head>' + injectionScript);
+      
+      // Saare links ko apne domain se replace karna taaki 404 na aaye
+      html = html.split(targetHost).join(myDomain);
+
+      return new Response(html, { headers: { "content-type": "text/html" } });
     }
 
-    // Images aur fonts ke liye direct response
     return response;
-
   } catch (e) {
-    return new Response("Analyzer Error: " + e.message, { status: 500 });
+    return new Response("Final Error: " + e.message, { status: 500 });
   }
 }
