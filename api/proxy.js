@@ -4,7 +4,7 @@ export const config = {
 
 export default async function (req) {
   const url = new URL(req.url);
-  const targetHost = "deltastudy.site";
+  const targetHost = "deltastudy.site/study-v2/batches";
   
   // Agar koi seedha site pe aaye toh use /study dikhao, baaki paths ko waise hi rehne do
   const path = url.pathname === "/" ? "/study" : url.pathname;
@@ -14,7 +14,7 @@ export default async function (req) {
     method: req.method,
     headers: {
       "Host": targetHost,
-      "Referer": "https://deltastudy.site/",
+      "Referer": "https://deltastudy.site/study-v2/batches",
       "User-Agent": req.headers.get("user-agent"),
     },
     body: req.body,
