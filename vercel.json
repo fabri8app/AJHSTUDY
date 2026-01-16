@@ -1,6 +1,5 @@
 {
-  "version": 2,
   "rewrites": [
-    { "source": "/:path*", "destination": "/api/index.js" }
+    { "source": "/(.*)", "destination": "/api/proxy" }
   ]
 }
