@@ -1,13 +1,3 @@
 {
-  "version": 2,
-  "rewrites": [
-    {
-      "source": "/",
-      "destination": "https://deltastudy.site/study"
-    },
-    {
-      "source": "/:path*",
-      "destination": "https://deltastudy.site/:path*"
-    }
-  ]
+  "cleanUrls": true
 }
